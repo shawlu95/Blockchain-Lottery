@@ -5,6 +5,8 @@ describe('Integration Test - Testnet', function () {
   let lottery;
 
   let owner, user1, user2;
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+
   this.beforeAll("Should return the new greeting once it's changed", async function () {
     [owner, user1, user2] = await ethers.getSigners();
     const chainId = hre.network.config.chainId;
@@ -49,4 +51,15 @@ describe('Integration Test - Testnet', function () {
 
     expect(await lottery.lottery_state()).to.equal(2);
   });
+
+  it('Check winner', async function () {
+    // Wait for 3 minutes to generate random number
+    await delay(3 * 60 * 1000);
+    const random = await lottery.randomness(0);
+    const count = await lottery.getPlayersCount();
+    const players = [user1.address, user2.address];
+    expect(count.toNumber()).to.equal(players.length);
+    const expectedWinner = players[random.mod(players.length)];
+    expect(await lottery.recentWinner()).to.equal(expectedWinner);
+  })
 });

@@ -6,10 +6,10 @@ async function main() {
   const chainId = hre.network.config.chainId;
 
   const config = require('./config.json').chainId[chainId.toString()];
-  const { subscriptionId, priceFeedAddress, vrfCoordinator, link, keyHash } = config;
+  const { subscriptionId, priceFeedAddress, vrfCoordinator, keyHash } = config;
   const Lottery = await ethers.getContractFactory('Lottery');
   const lottery = await Lottery.deploy(
-    subscriptionId, priceFeedAddress, vrfCoordinator, link, keyHash);
+    subscriptionId, priceFeedAddress, vrfCoordinator, keyHash);
   await lottery.deployed();
   console.log('Lottery deployed:', lottery.address);
 }

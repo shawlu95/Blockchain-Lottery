@@ -23,7 +23,6 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
     uint64 subscriptionId;
     AggregatorV3Interface ethUsdPriceFeed;
     VRFCoordinatorV2Interface COORDINATOR;
-    address link;
     bytes32 keyhash;
 
     address payable[] public players;
@@ -38,14 +37,12 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         uint64 _subscriptionId,
         address _priceFeedAddress,
         address _vrfCoordinator,
-        address _link,
         bytes32 _keyhash
     ) VRFConsumerBaseV2(_vrfCoordinator) {
         usdEntryFee = 50 * (10**18);
         subscriptionId = _subscriptionId;
         ethUsdPriceFeed = AggregatorV3Interface(_priceFeedAddress);
         COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);
-        link = _link;
         lottery_state = LOTTERY_STATE.CLOSED;
         keyhash = _keyhash;
     }
@@ -104,5 +101,9 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         lottery_state = LOTTERY_STATE.CLOSED;
         randomness = _randomness;
         emit FulfillRandomness(_requestId);
+    }
+
+    function getPlayersCount() public view returns (uint256 count) {
+        return players.length;
     }
 }
