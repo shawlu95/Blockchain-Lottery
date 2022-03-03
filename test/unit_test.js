@@ -4,7 +4,7 @@ const { parseEther } = require('ethers/lib/utils');
 const util = require('../scripts/util');
 
 describe.only('Integration Test - Testnet', function () {
-  let lottery;
+  let lottery, randomness;
   let subId;
   let owner, user1, user2;
   let mockV3Aggregator, vrfCoordinatorV2Mock;
@@ -34,13 +34,18 @@ describe.only('Integration Test - Testnet', function () {
     const fund = parseEther('1.0');
     await vrfCoordinatorV2Mock.fundSubscription(subId, fund);
 
+    const Governance = await ethers.getContractFactory('Governance');
+    const governance = await Governance.deploy();
+
     const Lottery = await ethers.getContractFactory("Lottery");
+    lottery = await Lottery.deploy(governance.address, mockV3Aggregator.address);
+
     const keyHash = util.toBytes32('');
-    lottery = await Lottery.deploy(
-      subId,
-      mockV3Aggregator.address,
-      vrfCoordinatorV2Mock.address,
-      keyHash);
+    const Randomness = await ethers.getContractFactory('Randomness');
+    randomness = await Randomness.deploy(
+      governance.address, vrfCoordinatorV2Mock.address, subId, keyHash);
+
+    await governance.init(lottery.address, randomness.address);
   });
 
   it('Can get entrace fee', async function () {
@@ -76,7 +81,7 @@ describe.only('Integration Test - Testnet', function () {
     expect(await lottery.getPlayersCount()).to.equal(2);
   });
 
-  it.only('Can end lottery', async function () {
+  it('Can end lottery', async function () {
     await lottery.connect(owner).startLottery();
     await lottery.connect(user1).enter({ value: parseEther('0.1') });
     await lottery.connect(user2).enter({ value: parseEther('0.2') });
@@ -89,7 +94,7 @@ describe.only('Integration Test - Testnet', function () {
 
     // Fulfill randomness
     const subBefore = await vrfCoordinatorV2Mock.getSubscription(subId);
-    const tx = await vrfCoordinatorV2Mock.fulfillRandomWords(subId, lottery.address);
+    const tx = await vrfCoordinatorV2Mock.fulfillRandomWords(subId, randomness.address);
     const subAfter = await vrfCoordinatorV2Mock.getSubscription(subId);
     await tx.wait();
 
@@ -97,11 +102,10 @@ describe.only('Integration Test - Testnet', function () {
     expect(await lottery.lottery_state()).to.equal(1);
 
     // Check winner
-    const rand = await lottery.randomness(0);
+    const rand = await randomness.randomness();
     const index = rand.mod(2); // We have two users
     const winner = await lottery.recentWinner();
     expect(winner).to.equal([user1.address, user2.address][index]);
-    console.log('Winner:', winner);
 
     // Check reset
     expect(await waffle.provider.getBalance(lottery.address)).to.equal(0);
