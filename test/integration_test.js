@@ -1,15 +1,21 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const util = require('../scripts/util');
 
-describe('Integration Test - Testnet', function () {
+describe.skip('Integration Test - Testnet', function () {
   let lottery;
 
   let owner, user1, user2;
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
   this.beforeAll("Should return the new greeting once it's changed", async function () {
-    [owner, user1, user2] = await ethers.getSigners();
+    // Only run integration test if --network is not local
     const chainId = hre.network.config.chainId;
+    if (util.isLocal(chainId)) {
+      this.skip();
+    }
+
+    [owner, user1, user2] = await ethers.getSigners();
 
     const config = require('../scripts/config.json').chainId[chainId.toString()];
     const { Lottery: address } = config;
