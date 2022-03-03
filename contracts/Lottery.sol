@@ -15,7 +15,7 @@ contract Lottery is Ownable {
         CLOSED,
         CALCULATING_WINNER
     }
-    LOTTERY_STATE public lottery_state;
+    LOTTERY_STATE public state;
 
     AggregatorV3Interface ethUsdPriceFeed;
     GovernanceInterface governance;
@@ -26,13 +26,13 @@ contract Lottery is Ownable {
 
     constructor(address _governance, address _priceFeedAddress) {
         usdEntryFee = 50 * (10**18);
-        lottery_state = LOTTERY_STATE.CLOSED;
+        state = LOTTERY_STATE.CLOSED;
         governance = GovernanceInterface(_governance);
         ethUsdPriceFeed = AggregatorV3Interface(_priceFeedAddress);
     }
 
     function enter() public payable {
-        require(lottery_state == LOTTERY_STATE.OPEN);
+        require(state == LOTTERY_STATE.OPEN);
         require(msg.value >= getEntranceFee(), "Not enough ETH!");
         players.push(payable(msg.sender));
     }
@@ -53,12 +53,12 @@ contract Lottery is Ownable {
     }
 
     function startLottery() public onlyOwner {
-        require(lottery_state == LOTTERY_STATE.CLOSED, "Closed!");
-        lottery_state = LOTTERY_STATE.OPEN;
+        require(state == LOTTERY_STATE.CLOSED, "Closed!");
+        state = LOTTERY_STATE.OPEN;
     }
 
     function endLottery() public onlyOwner {
-        lottery_state = LOTTERY_STATE.CALCULATING_WINNER;
+        state = LOTTERY_STATE.CALCULATING_WINNER;
         RandomnessInterface(governance.randomness()).requestRandomness();
     }
 
@@ -67,11 +67,12 @@ contract Lottery is Ownable {
     }
 
     function pickWinner(uint256 rand) external {
+        require(_msgSender() == governance.randomness());
         uint256 indexOfWinner = rand % players.length;
         recentWinner = players[indexOfWinner];
         recentWinner.transfer(address(this).balance);
 
         players = new address payable[](0);
-        lottery_state = LOTTERY_STATE.CLOSED;
+        state = LOTTERY_STATE.CLOSED;
     }
 }

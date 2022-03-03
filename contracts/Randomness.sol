@@ -16,15 +16,15 @@ contract Randomness is VRFConsumerBaseV2 {
     uint32 callbackGasLimit = 100000;
 
     // Set in constructor
+    GovernanceInterface governance;
+    VRFCoordinatorV2Interface coordinator;
     uint64 subscriptionId;
-    VRFCoordinatorV2Interface COORDINATOR;
     bytes32 keyhash;
+
     uint256 public randomness;
 
     event RequestedRandomness(uint256 requestId);
     event FulfillRandomness(uint256 requestId);
-
-    GovernanceInterface governance;
 
     constructor(
         address _governance,
@@ -33,13 +33,14 @@ contract Randomness is VRFConsumerBaseV2 {
         bytes32 _keyhash
     ) VRFConsumerBaseV2(_vrfCoordinator) {
         governance = GovernanceInterface(_governance);
-        COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);
+        coordinator = VRFCoordinatorV2Interface(_vrfCoordinator);
         subscriptionId = _subscriptionId;
         keyhash = _keyhash;
     }
 
     function requestRandomness() external {
-        uint256 requestId = COORDINATOR.requestRandomWords(
+        require(msg.sender == governance.lottery());
+        uint256 requestId = coordinator.requestRandomWords(
             keyhash,
             subscriptionId,
             requestConfirmations,
@@ -53,7 +54,7 @@ contract Randomness is VRFConsumerBaseV2 {
         uint256 _requestId,
         uint256[] memory _randomness
     ) internal override {
-        require(_randomness[0] > 0, "RNG failed!");
+        require(_randomness[0] > 0, "VRF failed!");
         randomness = _randomness[0];
 
         LotteryInterface(governance.lottery()).pickWinner(randomness);

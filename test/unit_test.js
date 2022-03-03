@@ -55,7 +55,7 @@ describe.only('Integration Test - Testnet', function () {
 
   it("Cannot enter before start", async function () {
     // State: CLOSED
-    expect(await lottery.lottery_state()).to.equal(1);
+    expect(await lottery.state()).to.equal(1);
     await expect(lottery.connect(user1).enter({ value: parseEther('0.1') })).to.be.reverted;
   });
 
@@ -73,7 +73,7 @@ describe.only('Integration Test - Testnet', function () {
     await lottery.connect(owner).startLottery();
 
     // State: OPEN
-    expect(await lottery.lottery_state()).to.equal(0);
+    expect(await lottery.state()).to.equal(0);
     await lottery.connect(user1).enter({ value: parseEther('0.1') });
     expect(await lottery.getPlayersCount()).to.equal(1);
 
@@ -90,7 +90,7 @@ describe.only('Integration Test - Testnet', function () {
     await lottery.connect(owner).endLottery();
 
     // State: CALCULATING_WINNER
-    expect(await lottery.lottery_state()).to.equal(2);
+    expect(await lottery.state()).to.equal(2);
 
     // Fulfill randomness
     const subBefore = await vrfCoordinatorV2Mock.getSubscription(subId);
@@ -99,7 +99,7 @@ describe.only('Integration Test - Testnet', function () {
     await tx.wait();
 
     // State: CLOSED
-    expect(await lottery.lottery_state()).to.equal(1);
+    expect(await lottery.state()).to.equal(1);
 
     // Check winner
     const rand = await randomness.randomness();

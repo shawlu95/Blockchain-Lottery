@@ -11,6 +11,8 @@ async function main() {
   // Deploy governance contract
   const Governance = await ethers.getContractFactory('Governance');
   const governance = await Governance.deploy();
+  await governance.deployed();
+  console.log('Governance deployed:', governance.address);
 
   // Deploy lottery contract
   const Lottery = await ethers.getContractFactory('Lottery');
@@ -23,7 +25,7 @@ async function main() {
   const Randomness = await ethers.getContractFactory('Randomness');
   const randomness = await Randomness.deploy(
     governance.address, vrfCoordinator, subscriptionId, keyHash);
-  await lottery.deployed();
+  await randomness.deployed();
   console.log('Randomness deployed:', randomness.address);
 
   // Link governance and randomness contract
