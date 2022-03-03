@@ -12,7 +12,7 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         CLOSED,
         CALCULATING_WINNER
     }
-    LOTTERY_STATE public lottery_state;
+    LOTTERY_STATE public state;
 
     // Constants
     uint32 numWords = 1;
@@ -43,12 +43,12 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         subscriptionId = _subscriptionId;
         ethUsdPriceFeed = AggregatorV3Interface(_priceFeedAddress);
         COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);
-        lottery_state = LOTTERY_STATE.CLOSED;
+        state = LOTTERY_STATE.CLOSED;
         keyhash = _keyhash;
     }
 
     function enter() public payable {
-        require(lottery_state == LOTTERY_STATE.OPEN);
+        require(state == LOTTERY_STATE.OPEN);
         require(msg.value >= getEntranceFee(), "Not enough ETH!");
         players.push(payable(msg.sender));
     }
@@ -69,12 +69,12 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
     }
 
     function startLottery() public onlyOwner {
-        require(lottery_state == LOTTERY_STATE.CLOSED, "Closed!");
-        lottery_state = LOTTERY_STATE.OPEN;
+        require(state == LOTTERY_STATE.CLOSED, "Closed!");
+        state = LOTTERY_STATE.OPEN;
     }
 
     function endLottery() public onlyOwner {
-        lottery_state = LOTTERY_STATE.CALCULATING_WINNER;
+        state = LOTTERY_STATE.CALCULATING_WINNER;
         uint256 requestId = COORDINATOR.requestRandomWords(
             keyhash,
             subscriptionId,
@@ -89,7 +89,7 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         uint256 _requestId,
         uint256[] memory _randomness
     ) internal override {
-        require(lottery_state == LOTTERY_STATE.CALCULATING_WINNER);
+        require(state == LOTTERY_STATE.CALCULATING_WINNER);
         uint256 rand = _randomness[0];
         require(rand > 0, "RNG failed!");
         uint256 indexOfWinner = rand % players.length;
@@ -98,7 +98,7 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
 
         // Reset
         players = new address payable[](0);
-        lottery_state = LOTTERY_STATE.CLOSED;
+        state = LOTTERY_STATE.CLOSED;
         randomness = _randomness;
         emit FulfillRandomness(_requestId);
     }

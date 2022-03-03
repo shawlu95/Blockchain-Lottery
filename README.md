@@ -7,15 +7,21 @@ Use VRF to generate random number which determines lottery winner. Prerequisite:
 ```bash
 npm install
 
+# BSC Testnet deploy
 hh run scripts/deploy.js --network bscTestnet
+
+# BSC Testnet verify
 hh verify --network bscTestnet \
   --constructor-args ./scripts/args/bscTestnet.js \
   0xa7d798621096f761342804272E0752B677E25783
 
+# Rinkeby deploy
 run scripts/deploy.js --network rinkeby
+
+# Rinkeby verify
 hh verify --network rinkeby \
   --constructor-args ./scripts/args/rinkeby.js \
-  0xe02c4643a042238C86fBbd8eE70fAE5E3D70055E
+  0x197B6aA305EE2868D39530F94505987debaa9055
 ```
 
 ## Basic Sample Hardhat Project
