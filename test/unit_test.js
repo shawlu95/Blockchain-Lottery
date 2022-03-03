@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const { parseEther } = require('ethers/lib/utils');
 const util = require('../scripts/util');
 
-describe.only('Integration Test - Testnet', function () {
+describe('Unit Test - Local', function () {
   let lottery, randomness;
   let subId;
   let owner, user1, user2;
