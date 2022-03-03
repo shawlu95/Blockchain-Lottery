@@ -7,21 +7,25 @@ Use VRF to generate random number which determines lottery winner. Prerequisite:
 ```bash
 npm install
 
-# BSC Testnet deploy
-hh run scripts/deploy.js --network bscTestnet
-
-# BSC Testnet verify
-hh verify --network bscTestnet \
-  --constructor-args ./scripts/args/bscTestnet.js \
-  0xa7d798621096f761342804272E0752B677E25783
-
-# Rinkeby deploy
+# deploy all contracts
 run scripts/deploy.js --network rinkeby
 
-# Rinkeby verify
+# Verify Governance.sol
+# https://rinkeby.etherscan.io/address/0xE90FFb555571a8C796A6319A53c1D39E83987666#code
 hh verify --network rinkeby \
-  --constructor-args ./scripts/args/rinkeby.js \
-  0x197B6aA305EE2868D39530F94505987debaa9055
+  0xE90FFb555571a8C796A6319A53c1D39E83987666
+
+# Verify Lottery.sol
+# https://rinkeby.etherscan.io/address/0x5E14AA543248e5C6449e30Bf3834aD918Ce3503F#code
+hh verify --network rinkeby \
+  --constructor-args ./scripts/args/rinkeby/lottery.js \
+  0x5E14AA543248e5C6449e30Bf3834aD918Ce3503F
+
+# Verify Randomness.sol
+# https://rinkeby.etherscan.io/address/0xc414051c1B3054f7389d745507fdf171AE70621F#code
+hh verify --network rinkeby \
+  --constructor-args ./scripts/args/rinkeby/randomness.js \
+  0xc414051c1B3054f7389d745507fdf171AE70621F
 ```
 
 ## Basic Sample Hardhat Project

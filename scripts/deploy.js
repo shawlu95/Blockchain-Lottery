@@ -7,11 +7,29 @@ async function main() {
 
   const config = require('./config.json').chainId[chainId.toString()];
   const { subscriptionId, priceFeedAddress, vrfCoordinator, keyHash } = config;
+
+  // Deploy governance contract
+  const Governance = await ethers.getContractFactory('Governance');
+  const governance = await Governance.deploy();
+  await governance.deployed();
+  console.log('Governance deployed:', governance.address);
+
+  // Deploy lottery contract
   const Lottery = await ethers.getContractFactory('Lottery');
   const lottery = await Lottery.deploy(
-    subscriptionId, priceFeedAddress, vrfCoordinator, keyHash);
+    governance.address, priceFeedAddress);
   await lottery.deployed();
   console.log('Lottery deployed:', lottery.address);
+
+  // Deploy randomness contract
+  const Randomness = await ethers.getContractFactory('Randomness');
+  const randomness = await Randomness.deploy(
+    governance.address, vrfCoordinator, subscriptionId, keyHash);
+  await randomness.deployed();
+  console.log('Randomness deployed:', randomness.address);
+
+  // Link governance and randomness contract
+  await governance.init(lottery.address, randomness.address);
 }
 
 main().catch((error) => {

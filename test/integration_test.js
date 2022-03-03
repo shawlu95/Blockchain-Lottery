@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const util = require('../scripts/util');
 
 describe('Integration Test - Testnet', function () {
-  let lottery;
+  let lottery, randomness;
   let owner, user1, user2;
 
   this.beforeAll("Should return the new greeting once it's changed", async function () {
@@ -16,10 +16,13 @@ describe('Integration Test - Testnet', function () {
     [owner, user1, user2] = await ethers.getSigners();
 
     const config = require('../scripts/config.json').chainId[chainId.toString()];
-    const { lotteryAddress } = config;
+    const { lotteryAddress, randomnessAddress } = config;
 
     const Lottery = await ethers.getContractFactory("Lottery");
     lottery = Lottery.attach(lotteryAddress);
+
+    const Randomness = await ethers.getContractFactory("Randomness");
+    randomness = Randomness.attach(randomnessAddress);
   });
 
   it("Start lottery", async function () {
@@ -58,7 +61,7 @@ describe('Integration Test - Testnet', function () {
 
   it.skip('Check winner', async function () {
     // Wait for 3 minutes to generate random number
-    const random = await lottery.randomness(0);
+    const random = await randomness.randomness();
     const count = await lottery.getPlayersCount();
     const players = [user1.address, user2.address];
     expect(count.toNumber()).to.equal(0);

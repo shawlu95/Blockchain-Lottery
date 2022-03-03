@@ -4,7 +4,7 @@ const { parseEther } = require('ethers/lib/utils');
 const util = require('../scripts/util');
 
 describe('Unit Test - Local', function () {
-  let lottery;
+  let lottery, randomness;
   let subId;
   let owner, user1, user2;
   let mockV3Aggregator, vrfCoordinatorV2Mock;
@@ -34,13 +34,18 @@ describe('Unit Test - Local', function () {
     const fund = parseEther('1.0');
     await vrfCoordinatorV2Mock.fundSubscription(subId, fund);
 
+    const Governance = await ethers.getContractFactory('Governance');
+    const governance = await Governance.deploy();
+
     const Lottery = await ethers.getContractFactory("Lottery");
+    lottery = await Lottery.deploy(governance.address, mockV3Aggregator.address);
+
     const keyHash = util.toBytes32('');
-    lottery = await Lottery.deploy(
-      subId,
-      mockV3Aggregator.address,
-      vrfCoordinatorV2Mock.address,
-      keyHash);
+    const Randomness = await ethers.getContractFactory('Randomness');
+    randomness = await Randomness.deploy(
+      governance.address, vrfCoordinatorV2Mock.address, subId, keyHash);
+
+    await governance.init(lottery.address, randomness.address);
   });
 
   it('Can get entrace fee', async function () {
@@ -89,7 +94,7 @@ describe('Unit Test - Local', function () {
 
     // Fulfill randomness
     const subBefore = await vrfCoordinatorV2Mock.getSubscription(subId);
-    const tx = await vrfCoordinatorV2Mock.fulfillRandomWords(subId, lottery.address);
+    const tx = await vrfCoordinatorV2Mock.fulfillRandomWords(subId, randomness.address);
     const subAfter = await vrfCoordinatorV2Mock.getSubscription(subId);
     await tx.wait();
 
@@ -97,7 +102,7 @@ describe('Unit Test - Local', function () {
     expect(await lottery.state()).to.equal(1);
 
     // Check winner
-    const rand = await lottery.randomness(0);
+    const rand = await randomness.randomness();
     const index = rand.mod(2); // We have two users
     const winner = await lottery.recentWinner();
     expect(winner).to.equal([user1.address, user2.address][index]);
